@@ -1,0 +1,7 @@
+
+__pycache__/*
+*.csv
+~$poster.pptx
+finishcasestest.py
+.DS_Store
+*.pyc
