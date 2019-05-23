@@ -2,178 +2,71 @@ import csv
 import datetime
 import sys
 import pandas as pd
-from predictors import naivePredict, olsPredict, KNNpredict
+from predictors import naivePredict, KNNpredict
 from errors import calcMSE
+import utilities as ut
 from plotting import *
 
+# entry to the code
+def read():
+    try:
+        trainingfile = sys.argv[1]
+        testfile = sys.argv[2]
+        outputfile = sys.argv[3]
+    except:
+        print('Input was not given in the correct format')
+        testfile ='/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2012-test.csv'
+        trainingfile = '/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2012-training.csv'
+        outputfile = 'output.csv'
 
-try:
-    trainingfile = sys.argv[1]
-    testfile = sys.argv[2]
-    outputfile = sys.argv[3]
-except:
-    print('Input was not given in the correct format')
-    filechoice = 'BPI_Challenge_2019'
-    testfile = filechoice + '-test.csv'
-    trainingfile = filechoice + '-training.csv'
-    outputfile = filechoice + '-output.csv'
-    testfile = '80%subset_2019-test.csv'
-    trainingfile = '80%subset_2019-training.csv'
+    main(testfile, trainingfile, outputfile)
+
 
 def main(testfile, trainingfile, outputfile):
     # Reading the data into a list of dictionaries
     starttime = datetime.datetime.today()
+
+    # read files as list of dictionaries
     test = [dict(line) for line in csv.DictReader(open(testfile, 'r'))]
     training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r'))]
     print('test set has', len(test),'instances, training set has', len(training),'instances')
 
-    # Doing all preprocessing; cutting unfinished cases, appending true values and making a list, linked by cases
+    # Doing all preprocessing; 
+    # cutting unfinished cases, 
+    # appending true values and making a list, 
+    # linked by cases
     # All lists are sorted on time
-    training, linked_training = preProcess(training)
-    test, linked_test = preProcess(test)
+    training, linked_training = ut.preProcess(training)
+    test, linked_test = ut.preProcess(test)
     print('All preprocessing has been done')
 
-    # Naive algorithm
+    # call average predictor
     startnaive = datetime.datetime.today()
     test = naivePredict(test, linked_training)
-    print('Naive Predictor Finished in', datetime.datetime.today()- startnaive)
+    print('Naive Predictor Finished in', datetime.datetime.today() - startnaive)
 
-    # OLS algorithm
-    startols = datetime.datetime.today()
-    test = olsPredict(test, linked_training)
-    print('OLS predicting finished in', datetime.datetime.today() - startols)
+    df_training = ut.dictToDf(training)
+    df_test = ut.dictToDf(test)
 
-    traindf = listDictToPandas(training)
-    testdf = listDictToPandas(test)
-
-    # KNN algorithm
-    startKNN = datetime.datetime.today()
-    testdf = KNNpredict(traindf, testdf)
-    print('KNN finished in', datetime.datetime.today() - startKNN)
+    # # KNN algorithm
+    # startKNN = datetime.datetime.today()
+    # df_test = KNNpredict(df_training, df_test)
+    # print('KNN finished in', datetime.datetime.today() - startKNN)
 
     # plotEstimate(testdf, testfile, 'KNN')
     # print("KNN plot made")
 
-    # Printing the MSEs of all estimators
-    eslst = ['Naive Predictor', 'OLS', 'KNN']
-    MSEs = calcMSE(testdf, eslst)
-    for i in range(len(eslst)):
-        print(eslst[i], 'has a mean squared error of', MSEs[i])
-        plotEstimate(testdf, testfile, eslst[i])
-        plotSqError(testdf, eslst[i])
-        errorDist(testdf, eslst[i])
+    # # Printing the MSEs of all estimators
+    # eslst = ['Naive Predictor', 'OLS', 'KNN']
+    # MSEs = calcMSE(df_test, eslst)
+    # for i in range(len(eslst)):
+    #     print(eslst[i], 'has a mean squared error of', MSEs[i])
+    #     plotEstimate(df_test, testfile, eslst[i])
+    #     plotSqError(df_test, eslst[i])
+    #     errorDist(df_test, eslst[i])
 
-    testdf.to_csv(outputfile)
-    print(outputfile + ' has been written')
+    df_test.to_csv(outputfile)
     print('the entire program took', datetime.datetime.today() - starttime)
 
-def preProcess(file):
-    newfile = sorted(fixdate(file), key=lambda k: k['event time:timestamp'])
-    linkedcases = linkedCaseSort(linkCases(newfile))
-    newfile = appendTrue(linkedcases, newfile)
-    linkedcases = linkedCaseSort(linkCases(newfile))
-    newfile = cutUnfinished(newfile, linkedcases)
-    linkedcases = linkedCaseSort(linkCases(newfile))
-    newfile, linkedcases = cutOutliers(linkedcases)
-    newfile = appendTrue(linkedcases, newfile)
-    return (newfile, linkedcases)
-
-def fixdate(file):
-    file1 = file.copy()
-    for i in file1:
-        date = i['event time:timestamp']
-        day, month, year, hour, minute, second = date[0:2], date[3:5], date[6:10], date[11:13],date[14:16],date[17:19]
-        actualdate = datetime.datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
-        i['event time:timestamp'] = actualdate
-    return file1
-
-def linkCases(file):
-    Applications = [Dict['case concept:name'] for Dict in file]
-    unique = set(Applications)
-    linked_file = {number:[] for number in unique}
-
-    for dictionary in file:
-        linked_file[dictionary['case concept:name']].append(dictionary)
-    return linked_file
-
-def linkedCaseSort(linkedlist):
-    endtimes = {i:linkedlist[i][-1]['event time:timestamp'] for i in linkedlist}
-    endtimes = sorted(endtimes.items(), key=lambda k: k[1])
-    goodorder = [i[0] for i in endtimes]
-    newlist = []
-    for i in goodorder:
-        newlist.append(linkedlist[i])
-    return newlist
-
-def appendTrue(linked_file, file):
-    output = file.copy()
-    endtimes = {i[-1]['case concept:name']: i[-1]['event time:timestamp'] for i in linked_file}
-    durations ={i[-1]['case concept:name']: i[-1]['event time:timestamp']-i[0]['event time:timestamp'] for i in linked_file}
-    for case in output:
-        case['duration'] = durations[case['case concept:name']]
-        case['remaining time'] = (endtimes[case['case concept:name']] - case['event time:timestamp'])
-    starttimes = {}
-    for case in output:
-        if case['case concept:name'] in starttimes:
-            case['time passed'] = case['event time:timestamp'] - starttimes[case['case concept:name']]
-        else:
-            starttimes[case['case concept:name']] = case['event time:timestamp']
-            case['time passed'] = datetime.timedelta(0)
-    return(output)
-
-def cutUnfinished(file, linkedFile, includedpercentage = 90):
-    includedamount = includedpercentage/100*len(file)
-    endvalues = [i[-1]['event concept:name'] for i in linkedFile]
-    unique = list(set(endvalues))
-    occurrenceDict = {i:endvalues.count(i) for i in unique}
-    occurrenceDict = {i[0]:i[1] for i in sorted(occurrenceDict.items(), key=lambda kv: kv[1], reverse=True)}
-    endevents = []
-    for i in occurrenceDict:
-        endevents.append(i)
-        includedamount -= occurrenceDict[i]
-        if includedamount <=0:
-            break
-    output = []
-    for case in linkedFile:
-        if case[-1]['event concept:name'] in endevents:
-            for event in case:
-                output.append(event)
-    output = sorted(output, key = lambda k: k['event time:timestamp'])
-    return(output)
-
-def cutOutliers(linkedFile):
-    linked_file = linkedFile.copy()
-    outliers = [i if i[0]['duration'].total_seconds()/3600 > 60000 else 0 for i in linkedFile ]
-    number = 0
-    for outlier in outliers:
-        if outlier != 0:
-            i = 0
-            fuckthis = True
-            while fuckthis:
-                outlier_i = outlier[i]['event time:timestamp']
-                outlier_2 = outlier[i+1]['event time:timestamp']
-                if (outlier_2 - outlier_i).total_seconds()/3600 > 20000:
-                    outlier[i] = 0
-                    outlier = [x for x in outlier if x != 0]
-                    fuckthis = False
-                else:
-                    outlier[i] = 0
-                    i+=1
-            linked_file[number] = outlier
-        number+=1
-    file = []
-    for case in linked_file:
-        for event in case:
-            file.append(event)
-    file = sorted(file, key = lambda k: k['event time:timestamp'])
-    return (file, linked_file)
-
-def listDictToPandas(file):
-    dfdict = {}
-    for columnname in file[1].keys():
-        dfdict[columnname] = [event[columnname] for event in file]
-    df = pd.DataFrame(data=dfdict)
-    return(df)
-
 # Call the function
-main(testfile, trainingfile, outputfile)
+read()

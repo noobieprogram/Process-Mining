@@ -4,12 +4,11 @@ from statsmodels.formula.api import ols
 from sklearn.neighbors import KNeighborsRegressor
 import numpy as np
 
-def naivePredict(Test, linked_training):
+def naivePredict(test, linked_training):
     starttimes = {}
-    i= 0
-    skipcount=0
+    i = 0
+    skipcount = 0
     currenttime = linked_training[i][-1]['event time:timestamp']
-    test = Test.copy()
     totaltime = datetime.timedelta(0)
     for event in test:
         #creating the proper durationlist
@@ -36,54 +35,6 @@ def naivePredict(Test, linked_training):
         print('skipcount is', skipcount)
     return test
 
-def olsPredict(test, linkedtrain):
-    output = test.copy()
-    i =0
-    trainingdict = {'hours_remaining':[],'hours_passed':[],'event_worth':[],'event_concept':[],'company':[]}
-    predictions = []
-    for event in output:
-        while i< len(linkedtrain):
-            if event['event time:timestamp'] > linkedtrain[i][-1]['event time:timestamp']:
-                for case in linkedtrain[i]:
-                    trainingdict['hours_remaining'].append(case['remaining time'].total_seconds()/3600)
-                    trainingdict['hours_passed'].append(case['time passed'].total_seconds()/3600)
-                    trainingdict['event_worth'].append(float(case['event Cumulative net worth (EUR)']))
-                    trainingdict['event_concept'].append(case['event concept:name'])
-                    trainingdict['company'].append(case['case Company'])
-                i += 1
-            else:
-                break
-            if i >= len(linkedtrain):
-                linreg = ols("hours_remaining ~ hours_passed", trainingdict).fit()
-                break
-            elif not event['event time:timestamp'] > linkedtrain[i][-1]['event time:timestamp']:
-                linreg = ols("hours_remaining ~ hours_passed", trainingdict).fit()
-
-        if i > 19:
-            currenttest = {'hours_passed':event['time passed'].total_seconds()/3600,
-                           'hours_remaining':event['remaining time'].total_seconds()/3600
-                           ,'event_worth':float(event['event Cumulative net worth (EUR)'])
-                           ,'event_concept':event['event concept:name']
-                           ,'company':event['case Company']
-                          }
-            pred_val = linreg.predict(pd.DataFrame(currenttest, index=[0]))
-            predictions.append(pred_val)
-        else:
-            predictions.append(-10)
-    output = olsPredict2(predictions, test)
-    return output
-
-def olsPredict2(predic1, test):
-    pred1 = predic1.copy()
-    output = test.copy()
-    for i in range(len(pred1)):
-        if not type(pred1[i]) == type(0):
-            if pred1[i][0] < 0:
-                pred1[i] = 0
-        output[i].update({'OLS':pred1[i]})
-    for i in output:
-        i['OLS'] = int(i['OLS'])
-    return output
 
 def KNNpredict(Df, df_tesT, k=7):
     df_test_output = df_tesT.copy()
