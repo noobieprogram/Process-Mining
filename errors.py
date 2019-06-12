@@ -1,25 +1,23 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
 import numpy as np
 
-def calcMSE(dataframe, predictorlist):
-    sqe_list = [[] for i in predictorlist]
+# mean squared error
+def calcMSE(dataframe, predictor):
+    true = []
+    estimate = []
     for event in dataframe.iterrows():
-        for i in range(len(predictorlist)):
-            remtime = event[1]['remaining time'].total_seconds()/3600
+            true.append(event[1]['remaining time'].total_seconds()/3600)
             try:
-                sqerror = (remtime - event[1][predictorlist[i]].total_seconds()/3600)**2
+                estimate.append(event[1][predictor].total_seconds()/3600)
             except:
-                sqerror = (remtime - event[1][predictorlist[i]]/3600)**2
-            sqe_list[i].append(sqerror)
-    mselist = []
-    length = len(sqe_list[1])
-    for i in range(len(predictorlist)):
-        mse = sum(sqe_list[i])/length
-        mselist.append(mse)
-    return(mselist)
+                estimate.append(event[1][predictor]/3600)
+
+    return mean_squared_error(true, estimate)
 
 
+# standard error
 def calcError(dataframe, predictor):
     error_list = []
     for event in dataframe.iterrows():
@@ -30,4 +28,3 @@ def calcError(dataframe, predictor):
             error = (remtime - event[1][predictor])
         error_list.append(error)
     return error_list
-

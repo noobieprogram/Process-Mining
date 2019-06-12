@@ -15,8 +15,8 @@ def read():
         outputfile = sys.argv[3]
     except:
         print('Input was not given in the correct format')
-        testfile ='/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2012-test.csv'
-        trainingfile = '/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2012-training.csv'
+        testfile ='/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2019-test.csv'
+        trainingfile = '/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2019-training.csv'
         outputfile = 'output.csv'
 
     main(testfile, trainingfile, outputfile)
@@ -27,8 +27,8 @@ def main(testfile, trainingfile, outputfile):
     starttime = datetime.datetime.today()
 
     # read files as list of dictionaries
-    test = [dict(line) for line in csv.DictReader(open(testfile, 'r'))]
-    training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r'))]
+    test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding = "ISO-8859-1"))]
+    training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r', encoding = "ISO-8859-1"))]
     print('test set has', len(test),'instances, training set has', len(training),'instances')
 
     # Doing all preprocessing; 
@@ -41,17 +41,17 @@ def main(testfile, trainingfile, outputfile):
     print('All preprocessing has been done')
 
     # call average predictor
-    startnaive = datetime.datetime.today()
-    test = naivePredict(test, linked_training)
-    print('Naive Predictor Finished in', datetime.datetime.today() - startnaive)
+    # startnaive = datetime.datetime.today()
+    # test = naivePredict(test, linked_training)
 
     df_training = ut.dictToDf(training)
     df_test = ut.dictToDf(test)
 
     # # KNN algorithm
-    # startKNN = datetime.datetime.today()
-    # df_test = KNNpredict(df_training, df_test)
-    # print('KNN finished in', datetime.datetime.today() - startKNN)
+    startKNN = datetime.datetime.today()
+    df_test = KNNpredict(df_training, df_test)
+    print('KNN finished in', datetime.datetime.today() - startKNN)
+    
 
     # plotEstimate(testdf, testfile, 'KNN')
     # print("KNN plot made")
@@ -66,7 +66,7 @@ def main(testfile, trainingfile, outputfile):
     #     errorDist(df_test, eslst[i])
 
     df_test.to_csv(outputfile)
-    print('the entire program took', datetime.datetime.today() - starttime)
+    # print('the entire program took', datetime.datetime.today() - starttime)
 
 # Call the function
 read()

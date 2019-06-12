@@ -54,7 +54,7 @@ def KNNpredict(Df, df_tesT, k=7):
     df = Df.sort_values(['case concept:name', 'event time:timestamp'], ascending=[True, True])
     df_test = df_tesT.sort_values(['case concept:name', 'event time:timestamp'], ascending=[True, True])
 
-    df_test.drop(['Naive Predictor', 'OLS'], axis=1, inplace=True)
+    
 
     df['time_remaining_hours'] = [float(i.total_seconds()/3600) for i in df['remaining time']]
     df['time passed'] = [float(i.total_seconds()/3600) for i in df['time passed']]
@@ -107,7 +107,7 @@ def KNNpredict(Df, df_tesT, k=7):
         KNR = KNeighborsRegressor(k)
         KNR.fit(train_x, train_y)
         if i in months_test:
-
             test_x['KNN'] = KNR.predict(test_x)
             df_test_output.update(test_x, overwrite=False)
+            
     return df_test_output
