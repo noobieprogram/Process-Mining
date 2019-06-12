@@ -15,8 +15,8 @@ def read():
         outputfile = sys.argv[3]
     except:
         print('Input was not given in the correct format')
-        testfile ='/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2019-test.csv'
-        trainingfile = '/Users/abdullahsaeed/Documents/2IOI0/BPI_Challenge_2019-training.csv'
+        testfile ='D:/BPI_Challenge_2019/BPI_Challenge_2019-test.csv'
+        trainingfile = 'D:/BPI_Challenge_2019/BPI_Challenge_2019-training.csv'
         outputfile = 'output.csv'
 
     main(testfile, trainingfile, outputfile)
@@ -41,17 +41,19 @@ def main(testfile, trainingfile, outputfile):
     print('All preprocessing has been done')
 
     # call average predictor
-    # startnaive = datetime.datetime.today()
-    # test = naivePredict(test, linked_training)
+    startnaive = datetime.datetime.today()
+    test = naivePredict(test, linked_training)
 
     df_training = ut.dictToDf(training)
     df_test = ut.dictToDf(test)
 
     # # KNN algorithm
-    startKNN = datetime.datetime.today()
-    df_test = KNNpredict(df_training, df_test)
-    print('KNN finished in', datetime.datetime.today() - startKNN)
-    
+    # startKNN = datetime.datetime.today()
+    # df_test = KNNpredict(df_training, df_test)
+    # print('KNN finished in', datetime.datetime.today() - startKNN)
+
+    print(calcMSE(df_test, 'Naive Predictor'))
+    df_test.head()    
 
     # plotEstimate(testdf, testfile, 'KNN')
     # print("KNN plot made")
