@@ -13,9 +13,10 @@ In addition, one needs a host of libraries to run this program. The following is
 * pandas
 * statsmodels
 * sklearn
-* fabulous
+* numpy
+* time
 
-Many of these libraries are found in the standard installation of Python. The rest can be 
+Most of these libraries are found in the standard installation of Python. The rest can be 
 installed using the `pip` tool by using the commands `pip install [library_name]`. If `pip` is not installed, the instructions to install are [here](https://pip.pypa.io/en/stable/installing/).
 
 After having everything installed, you can run the tool by using the following command in terminal/command prompt,
