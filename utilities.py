@@ -3,7 +3,9 @@ import datetime
 
 def dictToDf(file):
     dfdict = {}
-    for columnname in file[1].keys():
+    print(file[0])
+    print(file[1])
+    for columnname in file[0].keys():
         dfdict[columnname] = [event[columnname] for event in file]
     df = pd.DataFrame(data=dfdict)
     return(df)
