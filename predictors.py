@@ -1,8 +1,11 @@
 import datetime
+import time
 import pandas as pd
 from statsmodels.formula.api import ols
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.linear_model import LinearRegression
 import numpy as np
+from ols_final import OLS_Predictor
 
 def naivePredict(test, linked_training):
     starttimes = {}
@@ -54,7 +57,7 @@ def KNNpredict(Df, df_tesT, k=7):
     df = Df.sort_values(['case concept:name', 'event time:timestamp'], ascending=[True, True])
     df_test = df_tesT.sort_values(['case concept:name', 'event time:timestamp'], ascending=[True, True])
 
-    
+    df_test.drop(['Naive Predictor'], axis=1, inplace=True)
 
     df['time_remaining_hours'] = [float(i.total_seconds()/3600) for i in df['remaining time']]
     df['time passed'] = [float(i.total_seconds()/3600) for i in df['time passed']]
@@ -109,5 +112,8 @@ def KNNpredict(Df, df_tesT, k=7):
         if i in months_test:
             test_x['KNN'] = KNR.predict(test_x)
             df_test_output.update(test_x, overwrite=False)
-            
+
     return df_test_output
+
+def OLS_Predictor(train_df, test_df):
+    return OLS_Predictor(train_df, test_df)

@@ -8,11 +8,14 @@ def calcMSE(dataframe, predictor):
     true = []
     estimate = []
     for event in dataframe.iterrows():
-            true.append(event[1]['remaining time'].total_seconds()/3600)
+        if event[1][predictor] == 0.001:
+            continue
+        else:
+            true.append(event[1]['remaining time'].total_seconds()/86400)
             try:
-                estimate.append(event[1][predictor].total_seconds()/3600)
+                estimate.append(event[1][predictor].total_seconds()/86400)
             except:
-                estimate.append(event[1][predictor]/3600)
+                estimate.append(event[1][predictor]/86400)
 
     return mean_squared_error(true, estimate)
 
