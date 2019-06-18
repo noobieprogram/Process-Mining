@@ -41,7 +41,7 @@ def main(testfile, trainingfile, outputfile):
     print('All preprocessing has been done')
 
     # call average predictor
-    startnaive = datetime.datetime.today()
+    # startnaive = datetime.datetime.today()
     test = naivePredict(test, linked_training)
 
     df_training = ut.dictToDf(training)
@@ -56,7 +56,8 @@ def main(testfile, trainingfile, outputfile):
     df_test = OLS_Predictor(df_training, df_test)
     # plotEstimate(testdf, testfile, 'KNN')
     # print("KNN plot made")
-
+    # mse = calcMSE(df_test, 'KNN')
+    # print(mse)
     # # Printing the MSEs of all estimators
     # eslst = ['Naive Predictor', 'OLS', 'KNN']
 

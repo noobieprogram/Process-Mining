@@ -5,7 +5,7 @@ from statsmodels.formula.api import ols
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 import numpy as np
-from ols_final import OLS_Predictor
+from ols_final import OLS_Predictor as ols
 
 def naivePredict(test, linked_training):
     starttimes = {}
@@ -21,7 +21,7 @@ def naivePredict(test, linked_training):
             if i < len(linked_training):
                 currenttime =  linked_training[i][-1]['event time:timestamp']
             average = totaltime/i
-        if i > 19:
+        if i > 10:
             if event['case concept:name'] in starttimes:
                 estimate = average - (event['remaining time'])
                 if estimate.total_seconds() < 0:
@@ -59,9 +59,9 @@ def KNNpredict(Df, df_tesT, k=7):
 
     df_test.drop(['Naive Predictor'], axis=1, inplace=True)
 
-    df['time_remaining_hours'] = [float(i.total_seconds()/3600) for i in df['remaining time']]
-    df['time passed'] = [float(i.total_seconds()/3600) for i in df['time passed']]
-    df_test['time passed'] = [float(i.total_seconds()/3600) for i in df_test['time passed']]
+    df['time_remaining_hours'] = [float(i.total_seconds()/86400) for i in df['remaining time']]
+    df['time passed'] = [float(i.total_seconds()/86400) for i in df['time passed']]
+    df_test['time passed'] = [float(i.total_seconds()/86400) for i in df_test['time passed']]
 
     #Create different date values so we can loop over each month and train the KNN per month
     df['date'] = df['event time:timestamp'].map(lambda x: 100*x.year + x.month)
@@ -116,4 +116,4 @@ def KNNpredict(Df, df_tesT, k=7):
     return df_test_output
 
 def OLS_Predictor(train_df, test_df):
-    return OLS_Predictor(train_df, test_df)
+    return ols(train_df, test_df)
