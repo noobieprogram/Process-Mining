@@ -77,10 +77,6 @@ def plotSqError(test, estimator):
     plt.savefig(estimator + ' squared error plot.png')
 
 def errorDist(df, predictor):
-    try:
-        plt.savefig('skip.png')
-    except:
-        pass
     error = calcError(df, predictor)
     plt.hist(error, bins = 15)
     plt.xlabel("Error in hours")

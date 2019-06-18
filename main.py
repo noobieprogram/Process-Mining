@@ -6,6 +6,8 @@ from predictors import naivePredict, KNNpredict, OLS_Predictor
 from errors import calcMSE
 import utilities as ut
 from plotting import *
+import warnings
+warnings.filterwarnings('ignore')
 
 # entry to the code
 def read():
@@ -42,18 +44,24 @@ def main(testfile, trainingfile, outputfile):
 
     # call average predictor
     # startnaive = datetime.datetime.today()
+    print("Naive predictor has started")
     test = naivePredict(test, linked_training)
-
+    print("Naive predictor has ended")
     df_training = ut.dictToDf(training)
     df_test = ut.dictToDf(test)
 
 
     # KNN algorithm
     # startKNN = datetime.datetime.today()
+    print("KNN predictor has started")
     df_test = KNNpredict(df_training, df_test)
+    print("KNN predictor has ended")
     # print('KNN finished in', datetime.datetime.today() - startKNN)
     
+    print("OLS predictor has started")
     df_test = OLS_Predictor(df_training, df_test)
+    print("OLS predictor has ended")
+    # errorDist(df_test, 'KNN')
     # plotEstimate(testdf, testfile, 'KNN')
     # print("KNN plot made")
     # mse = calcMSE(df_test, 'KNN')
