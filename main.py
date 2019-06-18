@@ -31,7 +31,7 @@ def main(testfile, trainingfile, outputfile):
     # read files as list of dictionaries
     test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding = "ISO-8859-1"))]
     training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r', encoding = "ISO-8859-1"))]
-    print('test set has', len(test),'instances, training set has', len(training),'instances')
+    print('Training set has', len(training),'instances;', 'test set has', len(test),'instances')
 
     # Doing all preprocessing; 
     # cutting unfinished cases, 
