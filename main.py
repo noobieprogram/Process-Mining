@@ -1,82 +1,103 @@
 import csv
-import datetime
+import time
 import sys
 import pandas as pd
-from predictors import naivePredict, KNNpredict, OLS_Predictor 
+from predictors import naivePredict, KNNpredict, OLS_Predictor
 from errors import calcMSE
 import utilities as ut
 from plotting import *
+from multiprocessing import Process, Queue
 import warnings
+
+# ignore warnings thrown by libraries
 warnings.filterwarnings('ignore')
 
-# entry to the code
-def read():
-    try:
-        trainingfile = sys.argv[1]
-        testfile = sys.argv[2]
-        outputfile = sys.argv[3]
-    except:
-        print('Input was not given in the correct format')
-        testfile ='/Users/abdullahsaeed/Documents/2IOI0-2/10%subset_2019-test.csv'
-        trainingfile = '/Users/abdullahsaeed/Documents/2IOI0-2/10%subset_2019-training.csv'
-        outputfile = 'output.csv'
+def main(test, training, outputfile):
 
-    main(testfile, trainingfile, outputfile)
+    # converting files into list of dictionaries, using appropriate encoding
+    test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding="ISO-8859-1"))]
+    training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r', encoding="ISO-8859-1"))]
+    # just initial output to confirm that everything has been read properly
+    print('Input has been read correctly')
+    print('Training set has', len(training), 'instances;', 'test set has', len(test), 'instances')
 
-
-def main(testfile, trainingfile, outputfile):
-    # Reading the data into a list of dictionaries
-    starttime = datetime.datetime.today()
-
-    # read files as list of dictionaries
-    test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding = "ISO-8859-1"))]
-    training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r', encoding = "ISO-8859-1"))]
-    print('Training set has', len(training),'instances;', 'test set has', len(test),'instances')
-
-    # Doing all preprocessing; 
-    # cutting unfinished cases, 
-    # appending true values and making a list, 
-    # linked by cases
-    # All lists are sorted on time
+    # do pre-processing: cutting unfinished cases, link by cases, sort lists on time
     training, linked_training = ut.preProcess(training)
     test, linked_test = ut.preProcess(test)
     print('All preprocessing has been done')
 
-    # call average predictor
-    # startnaive = datetime.datetime.today()
+    # Naive estimator
     print("Naive predictor has started")
     test = naivePredict(test, linked_training)
     print("Naive predictor has ended")
+
+    # convert to Dataframes for OLS and KNN
     df_training = ut.dictToDf(training)
     df_test = ut.dictToDf(test)
 
+    # queue for output of KNN and OLS
+    out = Queue(2)
+    args = [df_training, df_test, out]
 
-    # KNN algorithm
-    # startKNN = datetime.datetime.today()
-    print("KNN predictor has started")
-    df_test = KNNpredict(df_training, df_test)
-    print("KNN predictor has ended")
-    # print('KNN finished in', datetime.datetime.today() - startKNN)
-    
-    print("OLS predictor has started")
-    df_test = OLS_Predictor(df_training, df_test)
-    print("OLS predictor has ended")
-    # errorDist(df_test, 'KNN')
-    # plotEstimate(testdf, testfile, 'KNN')
-    # print("KNN plot made")
-    # mse = calcMSE(df_test, 'KNN')
-    # print(mse)
-    # # Printing the MSEs of all estimators
-    # eslst = ['Naive Predictor', 'OLS', 'KNN']
+    # create and start new processes for KNN and OLS
+    p1 = Process(target  = KNNpredict, args = args)
+    p2 = Process(target = OLS_Predictor, args = args)
+    print("KNN and OLS predictors have started in parallel")
+    p1.start()
+    p2.start()
 
-    # for i in range(len(eslst)):
-    #     print(eslst[i], 'has a mean squared error of', MSEs[i])
-    #     plotEstimate(df_test, testfile, eslst[i])
-    #     plotSqError(df_test, eslst[i])
-    #     errorDist(df_test, eslst[i])
+    # KNN usually finishes first, so this is likely to be KNN
+    first = out.get()
+    # drop unnecessary columns
+    first.drop(first.columns[0], axis = 1, inplace = True)
 
-    df_test.to_csv(outputfile)
-    # print('the entire program took', datetime.datetime.today() - starttime)
+    second = out.get()
+    # drop unnecessary columns
+    second.drop(second.columns[0], axis = 1, inplace = True)
 
-# Call the function
-read()
+    final =  pd.merge(first, second, on='eventID ', suffixes=('KNN', 'OLS'))
+    # drop unnecessary columns
+    final.drop(final.columns[27: -1], axis = 1, inplace = True)
+    # write final output to file
+    final.to_csv(outputfile)
+
+    # first.to_csv("output2.csv")
+    # second.to_csv("output3.csv")
+
+    # finish the processes
+    p1.join()
+    p2.join()
+    p1.terminate()
+    p2.terminate()
+    print("All predictors have finished, program will terminate now!")
+
+# entry point to the program
+if __name__ == '__main__':
+    start = time.clock()
+    try:
+        trainingfile = sys.argv[1]
+        testfile = sys.argv[2]
+        outputfile = sys.argv[3]
+    except: # useful for development/debuggings
+        print('Input was not given in the correct format')
+        testfile ='10%subset_2019-test.csv'
+        trainingfile = '10%subset_2019-training.csv'
+        outputfile = 'output.csv'
+
+    # just a fancy intro
+    print('''
+    $$$$$$$\                                                                    $$\      $$\ $$\           $$\                     
+    $$  __$$\                                                                   $$$\    $$$ |\__|          \__|                    
+    $$ |  $$ | $$$$$$\   $$$$$$\   $$$$$$$\  $$$$$$\   $$$$$$$\  $$$$$$$\       $$$$\  $$$$ |$$\ $$$$$$$\  $$\ $$$$$$$\   $$$$$$\  
+    $$$$$$$  |$$  __$$\ $$  __$$\ $$  _____|$$  __$$\ $$  _____|$$  _____|      $$\$$\$$ $$ |$$ |$$  __$$\ $$ |$$  __$$\ $$  __$$\ 
+    $$  ____/ $$ |  \__|$$ /  $$ |$$ /      $$$$$$$$ |\$$$$$$\  \$$$$$$\        $$ \$$$  $$ |$$ |$$ |  $$ |$$ |$$ |  $$ |$$ /  $$ |
+    $$ |      $$ |      $$ |  $$ |$$ |      $$   ____| \____$$\  \____$$\       $$ |\$  /$$ |$$ |$$ |  $$ |$$ |$$ |  $$ |$$ |  $$ |
+    $$ |      $$ |      \$$$$$$  |\$$$$$$$\ \$$$$$$$\ $$$$$$$  |$$$$$$$  |      $$ | \_/ $$ |$$ |$$ |  $$ |$$ |$$ |  $$ |\$$$$$$$ |
+    \__|      \__|       \______/  \_______| \_______|\_______/ \_______/       \__|     \__|\__|\__|  \__|\__|\__|  \__| \____$$ |
+                                                                                                                         $$\   $$ |
+                                                                                                                         \$$$$$$  |
+                                                                                                                          \______/ 
+    ''')
+    main(testfile, trainingfile, outputfile)
+    print("Time taken:", time.clock() - start)
+    print(''' ✫彡 Done!''')

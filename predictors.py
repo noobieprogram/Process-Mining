@@ -6,6 +6,9 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 import numpy as np
 from ols_final import OLS_Predictor as ols
+import pandas as pd
+import warnings
+warnings.filterwarnings('ignore')
 
 def naivePredict(test, linked_training):
     starttimes = {}
@@ -35,11 +38,11 @@ def naivePredict(test, linked_training):
             event['Naive Predictor'] = datetime.timedelta(-10)
             skipcount+=1
     if skipcount > 0:
-        print('skipcount is', skipcount)
+        print('Skip count =', skipcount)
     return test
 
 
-def KNNpredict(Df, df_tesT, k=7):
+def KNNpredict(Df, df_tesT, output, k=7):
     df_test_output = df_tesT.copy()
     #Create two lists, one with the variables where we will train on (since they have the same values for both testsets)
     #Create another list where the values in the columns do not allign, so we know which ones to drop.
@@ -71,6 +74,7 @@ def KNNpredict(Df, df_tesT, k=7):
     df['date'] = df.groupby(['case concept:name'])['date'].transform(max)
     df_test['date'] = df_test.groupby(['case concept:name'])['date'].transform(max)
 
+
     #Append other variables which should be dropped to the drop list
     lst_drop_test = lst_drop.copy()
     lst_drop.extend(['time_remaining_hours', 'date', 'remaining time', 'event time:timestamp', 'duration'])
@@ -93,7 +97,8 @@ def KNNpredict(Df, df_tesT, k=7):
     months_list = months_train + list(set(months_test) - set(months_train))
     months_list.sort()
 
-                             
+    count = 0
+    # print(len(months_list))
     for i in months_list:
         list_months.append(i)
         dummy_df_train = df_train_dum[df_train_dum['date'].isin(list_months)]
@@ -112,8 +117,13 @@ def KNNpredict(Df, df_tesT, k=7):
         if i in months_test:
             test_x['KNN'] = KNR.predict(test_x)
             df_test_output.update(test_x, overwrite=False)
+        count += 1
 
-    return df_test_output
+    # put the result in the output queue
+    output.put(df_test_output)
+    # return df_test_output
 
-def OLS_Predictor(train_df, test_df):
-    return ols(train_df, test_df)
+def OLS_Predictor(train_df, test_df, output):
+    # put the result in the output queue
+    output.put(ols(train_df, test_df))
+    # return ols(train_df, test_df)
