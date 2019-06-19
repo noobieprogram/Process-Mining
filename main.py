@@ -6,7 +6,7 @@ from predictors import naivePredict, KNNpredict, OLS_Predictor
 from errors import calcMSE
 import utilities as ut
 from plotting import *
-from multiprocessing import Process, Queue
+import multiprocessing as mp
 import warnings
 
 # ignore warnings thrown by libraries
@@ -36,12 +36,13 @@ def main(test, training, outputfile):
     df_test = ut.dictToDf(test)
 
     # queue for output of KNN and OLS
-    out = Queue(2)
+    mp.set_start_method('spawn')
+    out = mp.Queue(2)
     args = [df_training, df_test, out]
 
     # create and start new processes for KNN and OLS
-    p1 = Process(target  = KNNpredict, args = args)
-    p2 = Process(target = OLS_Predictor, args = args)
+    p1 = mp.Process(target  = KNNpredict, args = args)
+    p2 = mp.Process(target = OLS_Predictor, args = args)
     print("KNN and OLS predictors have started in parallel")
     p1.start()
     p2.start()
@@ -73,31 +74,24 @@ def main(test, training, outputfile):
 
 # entry point to the program
 if __name__ == '__main__':
-    start = time.clock()
+    start = time.time()
+    flag = False
     try:
         trainingfile = sys.argv[1]
         testfile = sys.argv[2]
         outputfile = sys.argv[3]
-    except: # useful for development/debuggings
+        flag = True
+    except: # useful for development/debugging
+        ut.fancyPrint()
         print('Input was not given in the correct format')
-        testfile ='10%subset_2019-test.csv'
-        trainingfile = '10%subset_2019-training.csv'
+        testfile ='/10%subset_2019-test.csv'
+        trainingfile = '/10%subset_2019-training.csv'
         outputfile = 'output.csv'
 
-    # just a fancy intro
-    print('''
-    $$$$$$$\                                                                    $$\      $$\ $$\           $$\                     
-    $$  __$$\                                                                   $$$\    $$$ |\__|          \__|                    
-    $$ |  $$ | $$$$$$\   $$$$$$\   $$$$$$$\  $$$$$$\   $$$$$$$\  $$$$$$$\       $$$$\  $$$$ |$$\ $$$$$$$\  $$\ $$$$$$$\   $$$$$$\  
-    $$$$$$$  |$$  __$$\ $$  __$$\ $$  _____|$$  __$$\ $$  _____|$$  _____|      $$\$$\$$ $$ |$$ |$$  __$$\ $$ |$$  __$$\ $$  __$$\ 
-    $$  ____/ $$ |  \__|$$ /  $$ |$$ /      $$$$$$$$ |\$$$$$$\  \$$$$$$\        $$ \$$$  $$ |$$ |$$ |  $$ |$$ |$$ |  $$ |$$ /  $$ |
-    $$ |      $$ |      $$ |  $$ |$$ |      $$   ____| \____$$\  \____$$\       $$ |\$  /$$ |$$ |$$ |  $$ |$$ |$$ |  $$ |$$ |  $$ |
-    $$ |      $$ |      \$$$$$$  |\$$$$$$$\ \$$$$$$$\ $$$$$$$  |$$$$$$$  |      $$ | \_/ $$ |$$ |$$ |  $$ |$$ |$$ |  $$ |\$$$$$$$ |
-    \__|      \__|       \______/  \_______| \_______|\_______/ \_______/       \__|     \__|\__|\__|  \__|\__|\__|  \__| \____$$ |
-                                                                                                                         $$\   $$ |
-                                                                                                                         \$$$$$$  |
-                                                                                                                          \______/ 
-    ''')
+    # it's just a fancy intro text, nothing to worry about
+    if flag == True:
+        ut.fancyPrint()
+
     main(testfile, trainingfile, outputfile)
-    print("Time taken:", time.clock() - start)
+    print("Time taken:", str(time.time() - start)[0:6])
     print(''' ✫彡 Done!''')
