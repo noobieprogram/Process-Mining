@@ -1,7 +1,6 @@
 import datetime
 import time
 import pandas as pd
-from statsmodels.formula.api import ols
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 import numpy as np
