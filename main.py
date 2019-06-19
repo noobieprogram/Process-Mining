@@ -35,8 +35,10 @@ def main(test, training, outputfile):
     df_training = ut.dictToDf(training)
     df_test = ut.dictToDf(test)
 
-    # queue for output of KNN and OLS
+    
     mp.set_start_method('spawn')
+
+    # queue for output of KNN and OLS
     out = mp.Queue(2)
     args = [df_training, df_test, out]
 
