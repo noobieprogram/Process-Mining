@@ -36,7 +36,7 @@ def main(test, training, outputfile):
     df_test = ut.dictToDf(test)
 
     
-    mp.set_start_method('spawn')
+    # mp.set_start_method('spawn')
 
     # queue for output of KNN and OLS
     out = mp.Queue(2)
@@ -86,8 +86,8 @@ if __name__ == '__main__':
     except: # useful for development/debugging
         ut.fancyPrint()
         print('Input was not given in the correct format')
-        testfile ='/10%subset_2019-test.csv'
-        trainingfile = '/10%subset_2019-training.csv'
+        testfile ='D:/10%subset_2019-test.csv'
+        trainingfile = 'D:/10%subset_2019-training.csv'
         outputfile = 'output.csv'
 
     # it's just a fancy intro text, nothing to worry about

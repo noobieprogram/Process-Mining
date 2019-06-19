@@ -5,3 +5,5 @@ __pycache__/*
 finishcasestest.py
 .DS_Store
 *.pyc
+*.iml
+*.xml
