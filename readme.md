@@ -22,4 +22,4 @@ installed using the `pip` tool by using the command `pip install [library_name]`
 After having everything installed, you can run the tool by using the following command in terminal/command prompt,
 `python main.py "path/to/trainingFile.csv" "path/to/testFile.csv" "output.csv"`. The first two arguments are the paths to training and test files respectively while the last argument is the name (or path) to the output file. All of these files must be in csv format.
 
-After termination, an output file in the csv format will left in the directory of `main.py`. The file file will contain three addtional columns containing predictions.
+After termination, an output file in the csv format will left in the directory of `main.py`. This file will contain three addtional columns containing predictions from the three models.
