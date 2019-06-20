@@ -8,7 +8,7 @@ import utilities as ut
 from plotting import *
 import multiprocessing as mp
 
-def main(testfile, trainingfile, outputfile):
+def main(testfile: str, trainingfile: str, outputfile: str) -> None:
 
     # converting files into list of dictionaries, using appropriate encoding
     test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding="ISO-8859-1"))]
@@ -68,7 +68,7 @@ def main(testfile, trainingfile, outputfile):
     p2.join()
     p1.terminate()
     p2.terminate()
-    print("All predictors have finished, program proceed to terminate now!")
+    print("All predictors have finished, program will proceed to terminate now!")
 
 # entry point to the program
 if __name__ == '__main__':
