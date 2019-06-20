@@ -69,7 +69,7 @@ def main(testfile: str, trainingfile: str, outputfile: str):
     p1.terminate()
     p2.terminate()
     p3.terminate()
-    print("All predictors have finished, program proceed to terminate now!")
+    print("All predictors have finished, program will proceed to terminate now!")
 
 # entry point to the program
 if __name__ == '__main__':
