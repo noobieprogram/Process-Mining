@@ -2,77 +2,86 @@ import csv
 import time
 import sys
 import pandas as pd
-from predictors import naivePredict, KNNpredict, OLS_Predictor
+from predictors import *
 from errors import calcMSE
 import utilities as ut
 from plotting import *
 import multiprocessing as mp
+from naive_pre import *
 import warnings
 
 # ignore warnings thrown by libraries
 warnings.filterwarnings('ignore')
 
-def main(test, training, outputfile):
-
-    # converting files into list of dictionaries, using appropriate encoding
-    test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding="ISO-8859-1"))]
-    training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r', encoding="ISO-8859-1"))]
-    # just initial output to confirm that everything has been read properly
-    print('Input has been read correctly')
-    print('Training set has', len(training), 'instances;', 'test set has', len(test), 'instances')
-
-    # do pre-processing: cutting unfinished cases, link by cases, sort lists on time
-    training, linked_training = ut.preProcess(training)
-    test, linked_test = ut.preProcess(test)
-    print('All preprocessing has been done')
+def main(testfile, trainingfile, outputfile):
+    # # converting files into list of dictionaries, using appropriate encoding
+    # test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding="ISO-8859-1"))]
+    # training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r', encoding="ISO-8859-1"))]
+    # # just initial output to confirm that everything has been read properly
+    # print('Input has been read correctly')
+    # print('Training set has', len(training), 'instances;', 'test set has', len(test), 'instances')
+    #
+    # # do pre-processing: cutting unfinished cases, link by cases, sort lists on time
+    # training, linked_training = ut.preProcess(training)
+    # test, linked_test = ut.preProcess(test)
+    # print('All preprocessing has been done')
 
     # Naive estimator
     print("Naive predictor has started")
-    test = naivePredict(test, linked_training)
+    naive_training = import_csv(trainingfile)
+    naive_test = import_csv(testfile)
+    naive_training, naive_test = aggregate(naive_training, naive_test)
+    naive_training = clean_df(naive_training, True)
+    naive_training = aggregate_df(naive_training)
+    naive_test = aggregate_df(naive_test)
+    naive_training['df_type'] = 1
+    naive_test['df_type'] = 2
+    naive_column = predict_mean(naive_training, naive_test)
+    naive_test.concat(naive_column, axis = 1)
+    naive_test.to_csv(outputfile)
     print("Naive predictor has ended")
 
-    # convert to Dataframes for OLS and KNN
-    df_training = ut.dictToDf(training)
-    df_test = ut.dictToDf(test)
-
-    
-    # mp.set_start_method('spawn')
-
-    # queue for output of KNN and OLS
-    out = mp.Queue(2)
-    args = [df_training, df_test, out]
-
-    # create and start new processes for KNN and OLS
-    p1 = mp.Process(target  = KNNpredict, args = args)
-    p2 = mp.Process(target = OLS_Predictor, args = args)
-    print("KNN and OLS predictors have started in parallel")
-    p1.start()
-    p2.start()
-
-    # KNN usually finishes first, so this is likely to be KNN
-    first = out.get()
-    # drop unnecessary columns
-    first.drop(first.columns[0], axis = 1, inplace = True)
-
-    second = out.get()
-    # drop unnecessary columns
-    second.drop(second.columns[0], axis = 1, inplace = True)
-
-    final =  pd.merge(first, second, on='eventID ', suffixes=('KNN', 'OLS'))
-    # drop unnecessary columns
-    final.drop(final.columns[27: -1], axis = 1, inplace = True)
-    # write final output to file
-    final.to_csv(outputfile)
-
-    # first.to_csv("output2.csv")
-    # second.to_csv("output3.csv")
-
-    # finish the processes
-    p1.join()
-    p2.join()
-    p1.terminate()
-    p2.terminate()
-    print("All predictors have finished, program will terminate now!")
+    # # convert to Dataframes for OLS and KNN
+    # df_training = ut.dictToDf(training)
+    # df_test = ut.dictToDf(test)
+    #
+    # # mp.set_start_method('spawn')
+    #
+    # # queue for output of KNN and OLS
+    # out = mp.Queue(2)
+    # args = [df_training, df_test, out]
+    #
+    # # create and start new processes for KNN and OLS
+    # p1 = mp.Process(target  = KNNpredict, args = args)
+    # p2 = mp.Process(target = OLS_Predictor, args = args)
+    # print("KNN and OLS predictors have started in parallel")
+    # p1.start()
+    # p2.start()
+    #
+    # # KNN usually finishes first, so this is likely to be KNN
+    # first = out.get()
+    # # drop unnecessary columns
+    # first.drop(first.columns[0], axis = 1, inplace = True)
+    #
+    # second = out.get()
+    # # drop unnecessary columns
+    # second.drop(second.columns[0], axis = 1, inplace = True)
+    #
+    # final =  pd.merge(first, second, on='eventID ', suffixes=('', 'OLS'))
+    # # drop unnecessary columns
+    # final.drop(final.columns[27: -1], axis = 1, inplace = True)
+    # # write final output to file
+    # final.to_csv(outputfile)
+    #
+    # # first.to_csv("output2.csv")
+    # # second.to_csv("output3.csv")
+    #
+    # # finish the processes
+    # p1.join()
+    # p2.join()
+    # p1.terminate()
+    # p2.terminate()
+    # print("All predictors have finished, program will terminate now!")
 
 # entry point to the program
 if __name__ == '__main__':
@@ -86,8 +95,8 @@ if __name__ == '__main__':
     except: # useful for development/debugging
         ut.fancyPrint()
         print('Input was not given in the correct format')
-        testfile ='D:/10%subset_2019-test.csv'
-        trainingfile = 'D:/10%subset_2019-training.csv'
+        testfile ='D:/BPI_Challenge_2019/BPI_Challenge_2019-test.csv'
+        trainingfile = 'D:/BPI_Challenge_2019/BPI_Challenge_2019-training.csv'
         outputfile = 'output.csv'
 
     # it's just a fancy intro text, nothing to worry about

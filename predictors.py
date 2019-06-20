@@ -9,36 +9,50 @@ import pandas as pd
 import warnings
 warnings.filterwarnings('ignore')
 
-def naivePredict(test, linked_training):
-    starttimes = {}
-    i = 0
-    skipcount = 0
-    currenttime = linked_training[i][-1]['event time:timestamp']
-    totaltime = datetime.timedelta(0)
-    for event in test:
-        #creating the proper durationlist
-        while event['event time:timestamp'] > currenttime and i < len(linked_training):
-            totaltime += linked_training[i][0]['duration']
-            i+=1
-            if i < len(linked_training):
-                currenttime =  linked_training[i][-1]['event time:timestamp']
-            average = totaltime/i
-        if i > 10:
-            if event['case concept:name'] in starttimes:
-                estimate = average - (event['remaining time'])
-                if estimate.total_seconds() < 0:
-                    event['Naive Predictor'] = datetime.timedelta(0)
-                else:
-                    event['Naive Predictor'] = estimate
+MIN_SAMPLES = 30
+TAKE_COMPLETE_INTO_ACCOUNT = True
+
+PREDICT_START = '' + "Starting {type} estimator at {time}"
+PREDICT_DONE = '' + "Creating the {type} estimator took {secs} seconds."
+
+def predict_mean(training_df: pd.DataFrame, prediction_df: pd.DataFrame, timing=True) -> pd.Series:
+    """Perform a mean naive estimator on the prediction data based on the training data"""
+    start_time = time.time()  # Time the duration of the prediction process.
+    if timing:
+        print(PREDICT_START.format(type="naive mean", time=str(datetime.datetime.now())))
+
+    if len(training_df) < MIN_SAMPLES:
+        return pd.Series([np.NaN for sample in range(0, len(prediction_df))])
+
+    duration_remaining_sum = 0
+    duration_remaining_count = 0
+
+    column = []
+
+    df = pd.concat([training_df, prediction_df], sort=False)
+
+    training_mask = df['df_type'] == 2
+    df.loc[training_mask, 'event time:timestamp'] = df.loc[training_mask, 'final_event time:timestamp']
+
+    df.sort_values(by=['event time:timestamp', 'df_type'], inplace=True)
+
+    for n, row in df.iterrows():
+        if row['df_type'] == 1:
+            duration_remaining_sum = duration_remaining_sum + row['duration_remaining time:seconds']
+            duration_remaining_count = duration_remaining_count + 1
+        if row['df_type'] == 2:
+            if TAKE_COMPLETE_INTO_ACCOUNT and row['complete bool']:
+                column.append(0)
+            elif duration_remaining_count > MIN_SAMPLES:
+                prediction = max(
+                    (duration_remaining_sum / duration_remaining_count) - row['duration time:seconds'], 0)
+                column.append(prediction)
             else:
-                event['Naive Predictor'] = average
-                starttimes[event['case concept:name']] = event['event time:timestamp']
-        else:
-            event['Naive Predictor'] = datetime.timedelta(-10)
-            skipcount+=1
-    if skipcount > 0:
-        print('Skip count =', skipcount)
-    return test
+                column.append(np.NaN)
+
+    if timing:
+        print(PREDICT_DONE.format(type="naive mean", secs=time.time() - start_time))
+    return pd.Series(column, dtype='float')
 
 
 def KNNpredict(Df, df_tesT, output, k=7):
@@ -97,8 +111,12 @@ def KNNpredict(Df, df_tesT, output, k=7):
     months_list.sort()
 
     count = 0
-    # print(len(months_list))
+    print(len(months_list))
+    print('KNN: entering for loop')
     for i in months_list:
+        if count >= 11:
+            continue
+
         list_months.append(i)
         dummy_df_train = df_train_dum[df_train_dum['date'].isin(list_months)]
         dummy_df_test = df_test_dum[df_test['date'].isin(list_months)]
@@ -109,14 +127,20 @@ def KNNpredict(Df, df_tesT, output, k=7):
         dummy_df_test.drop(lst_drop_test, axis=1, inplace=True)
         train_x = dummy_df_train.copy()
         test_x = dummy_df_test.copy()
-        train_x.drop('event concept:name', axis=1, inplace=True)
-        test_x.drop('event concept:name', axis=1, inplace=True)
+        try:
+            train_x.drop('event concept:name', axis=1, inplace=True)
+            test_x.drop('event concept:name', axis=1, inplace=True)
+        except:
+            pass
         KNR = KNeighborsRegressor(k)
         KNR.fit(train_x, train_y)
         if i in months_test:
             test_x['KNN'] = KNR.predict(test_x)
             df_test_output.update(test_x, overwrite=False)
         count += 1
+        print(count)
+
+
 
     # put the result in the output queue
     output.put(df_test_output)
