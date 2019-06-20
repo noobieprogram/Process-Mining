@@ -1,12 +1,11 @@
 import datetime
-import time
-import pandas as pd
 from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import LinearRegression
-import numpy as np
-from ols_final import OLS_Predictor as ols
+from ols_gb import *
 import pandas as pd
 import warnings
+from multiprocessing import Queue
+
+# ignore warnings thrown by libraries
 warnings.filterwarnings('ignore')
 
 def naivePredict(test, linked_training):
@@ -41,7 +40,7 @@ def naivePredict(test, linked_training):
     return test
 
 
-def KNNpredict(Df, df_tesT, output, k=7):
+def KNNpredict(Df, df_tesT, output: Queue, k=7):
     df_test_output = df_tesT.copy()
     #Create two lists, one with the variables where we will train on (since they have the same values for both testsets)
     #Create another list where the values in the columns do not allign, so we know which ones to drop.
@@ -119,10 +118,13 @@ def KNNpredict(Df, df_tesT, output, k=7):
         count += 1
 
     # put the result in the output queue
-    output.put(df_test_output)
+    output.put(df_test_output[['eventID ', 'KNN']])
     # return df_test_output
 
-def OLS_Predictor(train_df, test_df, output):
+def ols(test_chunks, train_buckets, variables, dummy_cols, output: Queue):
     # put the result in the output queue
-    output.put(ols(train_df, test_df))
+    output.put(OLS_Predictor(test_chunks, train_buckets, variables, dummy_cols))
     # return ols(train_df, test_df)
+
+def gradient(test_chunks, train_buckets, variables, dummy_cols, output: Queue):
+    output.put(GB_Predictor(test_chunks, train_buckets, variables, dummy_cols))

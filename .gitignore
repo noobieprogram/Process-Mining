@@ -7,3 +7,4 @@ finishcasestest.py
 *.pyc
 *.iml
 *.xml
+*.ipynb
