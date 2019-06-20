@@ -7,10 +7,6 @@ from errors import calcMSE
 import utilities as ut
 from plotting import *
 import multiprocessing as mp
-import warnings
-
-# ignore warnings thrown by libraries
-warnings.filterwarnings('ignore')
 
 def main(testfile, trainingfile, outputfile):
 
