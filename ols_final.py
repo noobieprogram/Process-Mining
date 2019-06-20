@@ -132,7 +132,7 @@ def OLS_Predictor(train_df, test_df):
     s2 = time.time()
     test_chunks, train_buckets = SplitTrainSet(test_df, train_df)
     e2 = time.time()
-    print('OLS: done with splitting test and train set. It took {:.3f} sec'.format(e2-s2))
+    print('OLS: done with splitting test and train set')
     
     # make OLS models for each bucket
     # print('Start to make models')
@@ -169,6 +169,6 @@ def OLS_Predictor(train_df, test_df):
     result.drop(columns = remove, inplace = True)
     
     e4 = time.time()
-    print('OLS: done with predictions. It took {:.3f} sec.'.format(e4-s4))
+    print('OLS: done with predictions')
     
     return result

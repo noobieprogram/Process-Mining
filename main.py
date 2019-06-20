@@ -12,13 +12,13 @@ import warnings
 # ignore warnings thrown by libraries
 warnings.filterwarnings('ignore')
 
-def main(test, training, outputfile):
+def main(testfile, trainingfile, outputfile):
 
     # converting files into list of dictionaries, using appropriate encoding
     test = [dict(line) for line in csv.DictReader(open(testfile, 'r', encoding="ISO-8859-1"))]
     training = [dict(line) for line in csv.DictReader(open(trainingfile, 'r', encoding="ISO-8859-1"))]
     # just initial output to confirm that everything has been read properly
-    print('Input has been read correctly')
+    print('Datasets have been read correctly')
     print('Training set has', len(training), 'instances;', 'test set has', len(test), 'instances')
 
     # do pre-processing: cutting unfinished cases, link by cases, sort lists on time
@@ -35,7 +35,7 @@ def main(test, training, outputfile):
     df_training = ut.dictToDf(training)
     df_test = ut.dictToDf(test)
 
-    
+
     # mp.set_start_method('spawn')
 
     # queue for output of KNN and OLS
@@ -58,7 +58,7 @@ def main(test, training, outputfile):
     # drop unnecessary columns
     second.drop(second.columns[0], axis = 1, inplace = True)
 
-    final =  pd.merge(first, second, on='eventID ', suffixes=('KNN', 'OLS'))
+    final =  pd.merge(first, second, on='eventID ', suffixes=('', 'OLS'))
     # drop unnecessary columns
     final.drop(final.columns[27: -1], axis = 1, inplace = True)
     # write final output to file
@@ -72,7 +72,7 @@ def main(test, training, outputfile):
     p2.join()
     p1.terminate()
     p2.terminate()
-    print("All predictors have finished, program will terminate now!")
+    print("All predictors have finished, program proceed to terminate now!")
 
 # entry point to the program
 if __name__ == '__main__':
@@ -85,9 +85,9 @@ if __name__ == '__main__':
         flag = True
     except: # useful for development/debugging
         ut.fancyPrint()
-        print('Input was not given in the correct format')
-        testfile ='D:/10%subset_2019-test.csv'
-        trainingfile = 'D:/10%subset_2019-training.csv'
+        print('Input was not given in the correct format, therefore the default datasets will be loaded')
+        testfile ='10%subset_2019-test.csv'
+        trainingfile = '10%subset_2019-training.csv'
         outputfile = 'output.csv'
 
     # it's just a fancy intro text, nothing to worry about
@@ -95,5 +95,6 @@ if __name__ == '__main__':
         ut.fancyPrint()
 
     main(testfile, trainingfile, outputfile)
-    print("Time taken:", str(time.time() - start)[0:6])
+    # print total time taken
+    print("Time taken:", str(time.time() - start)[0:6], 'seconds')
     print(''' ✫彡 Done!''')
