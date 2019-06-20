@@ -16,7 +16,7 @@ In addition, a few libraries are also needed. The following is the list of all l
 * numpy
 * time
 
-Most of these libraries are installed by default in Python. The rest can be 
+Most of these libraries are found by default in Python. The rest can be 
 installed using the `pip` tool by using the command `pip install [library_name]`. If `pip` is not installed, the instructions to install are [here](https://pip.pypa.io/en/stable/installing/).
 
 After having everything installed, you can run the tool by using the following command in terminal/command prompt,
