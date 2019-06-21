@@ -35,7 +35,7 @@ def main(testfile: str, trainingfile: str, outputfile: str):
     print("KNN, OLS and Gradient Boosting predictors have started in parallel")
     test_chunks, train_buckets, variables, dummy_cols = PrepareDatasets(df_training, df_test)
 
-    # mp.set_start_method('spawn')
+    mp.set_start_method('spawn')
 
     # queue for output of KNN, GB and OLS
     out = mp.Queue()
@@ -83,8 +83,8 @@ if __name__ == '__main__':
     except: # useful for development/debugging
         ut.fancyPrint()
         print('Input was not given in the correct format, therefore the default datasets will be loaded')
-        testfile ='D:/10%subset_2019-test.csv'
-        trainingfile = 'D:/10%subset_2019-training.csv'
+        testfile ='/10%subset_2019-test.csv'
+        trainingfile = '/10%subset_2019-training.csv'
         outputfile = 'output.csv'
 
     # it's just a fancy intro text, nothing to worry about

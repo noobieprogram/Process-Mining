@@ -171,8 +171,6 @@ def OLS_Predictor(test_chunks, train_buckets, variables, dummy_cols):
         chunk.loc[chunk['OLS Predictor'] < 0, 'OLS Predictor'] = 0
     e4 = time.time()
 
-
-
     # concatinate all chucnks together
     result = pd.concat(test_chunks)
 
@@ -185,7 +183,7 @@ def OLS_Predictor(test_chunks, train_buckets, variables, dummy_cols):
 def GB_Predictor(test_chunks, train_buckets, variables, dummy_cols):
     test_chunks = test_chunks.copy()
     train_buckets = train_buckets.copy()
-    variables = variables[:2]
+    variables = variables[:3]
     dummy_cols = dummy_cols.copy()
 
     # make GB models for each bucket
@@ -193,7 +191,7 @@ def GB_Predictor(test_chunks, train_buckets, variables, dummy_cols):
     params = {
         'n_estimators': 20,
         'max_depth': 3,
-        'learning_rate': 1,
+        'learning_rate': 0.1,
         'criterion': 'mse'
     }
 
